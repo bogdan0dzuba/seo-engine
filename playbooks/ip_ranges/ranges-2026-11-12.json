@@ -1950,6 +1950,335 @@
           }
         ]
       }
+    },
+    "bingbot": {
+      "source": "https://www.bing.com/toolbox/bingbot.json",
+      "payload": {
+        "creationTime": "2024-01-03T10:00:00.121331",
+        "prefixes": [
+          {
+            "ipv4Prefix": "157.55.39.0/24"
+          },
+          {
+            "ipv4Prefix": "207.46.13.0/24"
+          },
+          {
+            "ipv4Prefix": "40.77.167.0/24"
+          },
+          {
+            "ipv4Prefix": "13.66.139.0/24"
+          },
+          {
+            "ipv4Prefix": "13.66.144.0/24"
+          },
+          {
+            "ipv4Prefix": "52.167.144.0/24"
+          },
+          {
+            "ipv4Prefix": "13.67.10.16/28"
+          },
+          {
+            "ipv4Prefix": "13.69.66.240/28"
+          },
+          {
+            "ipv4Prefix": "13.71.172.224/28"
+          },
+          {
+            "ipv4Prefix": "139.217.52.0/28"
+          },
+          {
+            "ipv4Prefix": "52.130.224.112/28"
+          },
+          {
+            "ipv4Prefix": "191.233.204.224/28"
+          },
+          {
+            "ipv4Prefix": "20.36.108.32/28"
+          },
+          {
+            "ipv4Prefix": "20.43.120.16/28"
+          },
+          {
+            "ipv4Prefix": "40.79.131.208/28"
+          },
+          {
+            "ipv4Prefix": "40.79.186.176/28"
+          },
+          {
+            "ipv4Prefix": "52.231.148.0/28"
+          },
+          {
+            "ipv4Prefix": "20.79.107.240/28"
+          },
+          {
+            "ipv4Prefix": "51.105.67.0/28"
+          },
+          {
+            "ipv4Prefix": "20.125.163.80/28"
+          },
+          {
+            "ipv4Prefix": "40.77.188.0/22"
+          },
+          {
+            "ipv4Prefix": "65.55.210.0/24"
+          },
+          {
+            "ipv4Prefix": "199.30.24.0/23"
+          },
+          {
+            "ipv4Prefix": "40.77.202.0/24"
+          },
+          {
+            "ipv4Prefix": "40.77.139.0/25"
+          },
+          {
+            "ipv4Prefix": "20.74.197.0/28"
+          },
+          {
+            "ipv4Prefix": "20.15.133.160/27"
+          },
+          {
+            "ipv4Prefix": "40.77.177.0/24"
+          },
+          {
+            "ipv4Prefix": "40.77.178.0/23"
+          }
+        ]
+      }
+    },
+    "ClaudeBot": {
+      "source": "https://claude.com/crawling/bots.json",
+      "payload": {
+        "creationTime": "2026-10-20T00:00:00Z",
+        "prefixes": [
+          {
+            "ipv4Prefix": "216.73.216.0/22"
+          },
+          {
+            "ipv4Prefix": "34.162.230.222/32"
+          },
+          {
+            "ipv4Prefix": "34.162.244.71/32"
+          },
+          {
+            "ipv4Prefix": "34.162.191.81/32"
+          },
+          {
+            "ipv4Prefix": "34.162.86.102/32"
+          },
+          {
+            "ipv4Prefix": "136.79.143.251/32"
+          },
+          {
+            "ipv4Prefix": "136.83.20.215/32"
+          },
+          {
+            "ipv4Prefix": "34.162.111.78/32"
+          },
+          {
+            "ipv4Prefix": "34.162.90.102/32"
+          },
+          {
+            "ipv4Prefix": "34.162.27.34/32"
+          },
+          {
+            "ipv4Prefix": "34.152.124.140/32"
+          },
+          {
+            "ipv4Prefix": "34.153.21.190/32"
+          },
+          {
+            "ipv4Prefix": "34.186.252.4/32"
+          },
+          {
+            "ipv4Prefix": "34.162.153.71/32"
+          }
+        ]
+      }
+    },
+    "Claude-User": {
+      "source": "https://claude.com/crawling/bots.json",
+      "payload": {
+        "creationTime": "2026-10-20T00:00:00Z",
+        "prefixes": [
+          {
+            "ipv4Prefix": "216.73.216.0/22"
+          },
+          {
+            "ipv4Prefix": "34.162.230.222/32"
+          },
+          {
+            "ipv4Prefix": "34.162.244.71/32"
+          },
+          {
+            "ipv4Prefix": "34.162.191.81/32"
+          },
+          {
+            "ipv4Prefix": "34.162.86.102/32"
+          },
+          {
+            "ipv4Prefix": "136.79.143.251/32"
+          },
+          {
+            "ipv4Prefix": "136.83.20.215/32"
+          },
+          {
+            "ipv4Prefix": "34.162.111.78/32"
+          },
+          {
+            "ipv4Prefix": "34.162.90.102/32"
+          },
+          {
+            "ipv4Prefix": "34.162.27.34/32"
+          },
+          {
+            "ipv4Prefix": "34.152.124.140/32"
+          },
+          {
+            "ipv4Prefix": "34.153.21.190/32"
+          },
+          {
+            "ipv4Prefix": "34.186.252.4/32"
+          },
+          {
+            "ipv4Prefix": "34.162.153.71/32"
+          }
+        ]
+      }
+    },
+    "Claude-SearchBot": {
+      "source": "https://claude.com/crawling/bots.json",
+      "payload": {
+        "creationTime": "2026-10-20T00:00:00Z",
+        "prefixes": [
+          {
+            "ipv4Prefix": "216.73.216.0/22"
+          },
+          {
+            "ipv4Prefix": "34.162.230.222/32"
+          },
+          {
+            "ipv4Prefix": "34.162.244.71/32"
+          },
+          {
+            "ipv4Prefix": "34.162.191.81/32"
+          },
+          {
+            "ipv4Prefix": "34.162.86.102/32"
+          },
+          {
+            "ipv4Prefix": "136.79.143.251/32"
+          },
+          {
+            "ipv4Prefix": "136.83.20.215/32"
+          },
+          {
+            "ipv4Prefix": "34.162.111.78/32"
+          },
+          {
+            "ipv4Prefix": "34.162.90.102/32"
+          },
+          {
+            "ipv4Prefix": "34.162.27.34/32"
+          },
+          {
+            "ipv4Prefix": "34.152.124.140/32"
+          },
+          {
+            "ipv4Prefix": "34.153.21.190/32"
+          },
+          {
+            "ipv4Prefix": "34.186.252.4/32"
+          },
+          {
+            "ipv4Prefix": "34.162.153.71/32"
+          }
+        ]
+      }
+    },
+    "Goose": {
+      "verification": "unavailable"
+    },
+    "Diffbot": {
+      "verification": "unavailable"
+    },
+    "DuckDuckBot": {
+      "verification": "unavailable"
+    },
+    "Claude-Code": {
+      "verification": "unavailable"
+    },
+    "DuckAssistBot": {
+      "verification": "unavailable"
+    },
+    "Bytespider": {
+      "verification": "unavailable"
+    },
+    "Amazonbot": {
+      "verification": "unavailable"
+    },
+    "Timpibot": {
+      "verification": "unavailable"
+    },
+    "YandexAdditional": {
+      "verification": "unavailable"
+    },
+    "Mail.RU": {
+      "verification": "unavailable"
+    },
+    "Cursor": {
+      "verification": "unavailable"
+    },
+    "MistralAI-User": {
+      "verification": "unavailable"
+    },
+    "meta-externalfetcher": {
+      "verification": "unavailable"
+    },
+    "OpenAI-Codex": {
+      "verification": "unavailable"
+    },
+    "cohere-ai": {
+      "verification": "unavailable"
+    },
+    "Windsurf": {
+      "verification": "unavailable"
+    },
+    "GoogleOther": {
+      "verification": "unavailable"
+    },
+    "Google-InspectionTool": {
+      "verification": "unavailable"
+    },
+    "YandexBot": {
+      "verification": "unavailable"
+    },
+    "Applebot-Extended": {
+      "verification": "unavailable"
+    },
+    "Applebot": {
+      "verification": "unavailable"
+    },
+    "Codex": {
+      "verification": "unavailable"
+    },
+    "CCBot": {
+      "verification": "unavailable"
+    },
+    "Mediapartners-Google": {
+      "verification": "unavailable"
+    },
+    "Google-CloudVertexBot": {
+      "verification": "unavailable"
+    },
+    "anthropic-ai": {
+      "verification": "unavailable"
+    },
+    "meta-externalagent": {
+      "verification": "unavailable"
+    },
+    "AdsBot-Google": {
+      "verification": "unavailable"
     }
   }
 }

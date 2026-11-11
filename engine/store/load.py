@@ -3,7 +3,6 @@ import collections
 import datetime as dt
 import hashlib
 import json
-import re
 from pathlib import Path
 from engine.config import read_json, page_path, section
 from engine.collect.freshness import iso, real_dates, yandex_evidence, check, month_end
@@ -18,7 +17,7 @@ def evidence(file, row=None):
 
 
 def register(db, source, snapshot, newest, ev, asof):
-    upsert(db, 'stat_registry', source=source, snapshot=snapshot, newest_real=newest,
+    upsert(db, 'source_status', source=source, snapshot=snapshot, newest_real=newest,
            status=check(newest, asof)['status'], evidence=J(ev))
 
 
@@ -210,10 +209,8 @@ def load(cfg, date):
             load_extra(db, {k: v for k, v in payloads.items() if k != 'crawl'}, folder, cfg)
         f = Path(cfg.get('effects_file', '')).expanduser()
         if f.is_file():
-            text = f.read_text()
-            for match in re.finditer(r'^## (E-\d+) · (\d{4}-\d{2}-\d{2})[^\n]*\n(.*?)(?=^## |\Z)', text, re.M | re.S):
-                ident, day, record = match.groups()
-                upsert(db, 'experiment', id=ident, date=day, status='unassessed', record=record.strip(), source=str(f))
+            for row in read_json(f):
+                upsert(db, 'experiment', **row, source=str(f))
         aggregate_logs(db)
     result = counts(db)
     db.close()

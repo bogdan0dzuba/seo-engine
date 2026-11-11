@@ -7,6 +7,7 @@ import time
 from urllib.parse import quote, urlencode
 from engine.collect.http import keychain, request, CollectionError
 from engine.config import write_json
+from engine.collect.endpoint import Endpoints
 
 
 def b64(value):
@@ -40,21 +41,26 @@ def authorize(item):
 
 
 def collect(cfg, folder, start, end):
-    token = authorize(cfg['keychain']['google'])
+    endpoints = Endpoints(folder, 'google')
+    token = endpoints.attempt('google/authorization', lambda: authorize(cfg['keychain']['google']))
+    if token is None:
+        return endpoints.errors
     base = 'https://www.googleapis.com/webmasters/v3/sites/'+quote(cfg['gsc_property'], safe='')
-    # Keep aggregate windows as aggregates, and collect date×page×query for future true daily facts.
     for dimensions in (['date'], ['page'], ['query'], ['page', 'query'], ['date', 'page', 'query']):
-        rows, offset = [], 0
-        while True:
-            p = request(base+'/searchAnalytics/query', token, {'startDate': start, 'endDate': end,
-                        'dimensions': dimensions, 'rowLimit': 25000, 'startRow': offset, 'dataState': 'final'}, scheme='Bearer')
-            chunk = p.get('rows', [])
-            rows.extend(chunk)
-            if len(chunk) < 25000:
-                break
-            offset += 25000
-        p['rows'] = rows
-        p['_window'] = [start, end]
-        p['_dimensions'] = dimensions
-        write_json(folder/('gsc_'+'_'.join(dimensions)+'.json'), p)
-    write_json(folder/'gsc_sitemaps.json', request(base+'/sitemaps', token, scheme='Bearer'))
+        name = 'gsc_'+'_'.join(dimensions)
+        def analytics():
+            rows, offset = [], 0
+            try:
+                while True:
+                    p = request(base+'/searchAnalytics/query', token, {'startDate': start, 'endDate': end,
+                                'dimensions': dimensions, 'rowLimit': 25000, 'startRow': offset, 'dataState': 'final'}, scheme='Bearer')
+                    chunk = p.get('rows', [])
+                    rows.extend(chunk)
+                    if len(chunk) < 25000:
+                        return dict(p, rows=rows, _window=[start, end], _dimensions=dimensions, _complete=True)
+                    offset += 25000
+            finally:
+                write_json(folder/(name+'.json'), {'rows': rows, '_window': [start, end], '_dimensions': dimensions, '_complete': False})
+        endpoints.save(name, 'searchAnalytics/query/'+','.join(dimensions), analytics)
+    endpoints.save('gsc_sitemaps', '/sitemaps', lambda: request(base+'/sitemaps', token, scheme='Bearer'))
+    return endpoints.errors

@@ -14,25 +14,47 @@ from engine.config import ROOT, read_json, write_json, page_path
 
 def fetch_ranges(date):
     from engine.collect.http import request
-    result = {}
-    for family, url in read_json(ROOT/'playbooks/ip_sources.json').items():
-        result[family] = {'source': url, 'payload': request(url)}
-    write_json(ROOT/'playbooks/ip_ranges'/('ranges-'+date+'.json'), {'date': date, 'families': result})
+    path = ROOT/'playbooks/ip_ranges'/('ranges-'+date+'.json')
+    result = read_json(path).get('families', {}) if path.exists() else {}
+    cache, errors = {}, []
+    families = {n for names in read_json(ROOT/'playbooks/ai_bots.yaml').values() for n in names}
+    sources = read_json(ROOT/'playbooks/ip_sources.json')
+    for family in sorted(families):
+        url = sources.get(family)
+        if url is None:
+            result[family] = {'verification': 'unavailable'}
+        else:
+            if url not in cache:
+                try:
+                    cache[url] = request(url)
+                except Exception as error:
+                    cache[url] = None
+                    errors.append({'endpoint': url, 'error_class': type(error).__name__})
+            if cache[url] is not None:
+                result[family] = {'source': url, 'payload': cache[url]}
+    write_json(path, {'date': date, 'families': result, 'errors': errors})
+    return errors
 
 
 def ranges_for(date):
-    paths = sorted(p for p in (ROOT/'playbooks/ip_ranges').glob('ranges-*.json') if p.stem[7:] <= date)
-    if not paths:
+    day = dt.date.fromisoformat(date)
+    candidates = []
+    for path in (ROOT/'playbooks/ip_ranges').glob('ranges-*.json'):
+        snapshot = dt.date.fromisoformat(path.stem[7:])
+        distance = abs((day-snapshot).days)
+        if distance <= 30:
+            candidates.append((distance, snapshot > day, path))
+    if not candidates:
         return {}
-    payload = read_json(paths[-1])
-    # Stale IP snapshots cannot establish current identity.
-    if (dt.date.fromisoformat(date)-dt.date.fromisoformat(payload['date'])).days > 30:
-        return {}
-    result = {}
-    for family, entry in payload.get('families', {}).items():
-        result[family] = [ipaddress.ip_network(v) for row in entry['payload'].get('prefixes', [])
-                          for k, v in row.items() if k in ('ipv4Prefix', 'ipv6Prefix')]
-    return result
+    payload = read_json(min(candidates)[2])
+    return {family: [ipaddress.ip_network(v) for row in entry.get('payload', {}).get('prefixes', [])
+                     for k, v in row.items() if k in ('ipv4Prefix', 'ipv6Prefix')]
+            for family, entry in payload.get('families', {}).items()}
+
+
+def is_probe(path):
+    return bool(re.search(r'(?:^|/)(?:\.env(?:[./]|$)|\.git(?:/|$)|\.aws(?:/|$)|wp-[^/]*|wordpress|phpmyadmin|xmlrpc\.php|vendor/phpunit|actuator|server-status|config\.php)|\.(?:sql|bak)$', path, re.I))
+
 
 
 def header(headers, name):
@@ -48,6 +70,7 @@ def assistant(referrer, domains):
 def parse(cfg, output):
     families = {name: cls for cls, names in read_json(ROOT/'playbooks/ai_bots.yaml').items() for name in names}
     ranges = {}
+    sources = read_json(ROOT/'playbooks/ip_sources.json')
     rows, excluded, malformed = [], 0, 0
     log = Path(cfg['access_log']).expanduser()
     limit = log.stat().st_size
@@ -75,15 +98,16 @@ def parse(cfg, output):
                     family = 'unknown:'+match[0].lower() if match else 'other'
                 p = page_path(uri)
                 ip = header(headers, cfg['client_address_header']).split(',')[0].strip()
-                ranges.setdefault(date, ranges_for(date))
-                verified = 'unverified'
+                if date not in ranges:
+                    ranges[date] = ranges_for(date)
+                verified = 'unverified' if family in sources else 'unavailable'
                 try:
                     addr = ipaddress.ip_address(ip)
                     if any(addr in net for net in ranges[date].get(family, [])):
                         verified = 'verified'
                 except ValueError:
                     pass
-                if re.search(r'(?:^|/)(?:\.env(?:\.|/|$)|\.git|wp-admin|wp-login|phpmyadmin)|\.(?:sql|bak)$', p, re.I) and cls != 'unknown':
+                if is_probe(p) and cls != 'unknown':
                     verified = 'spoofed'
                 special = bool(re.search(r'^/(?:robots\.txt|llms[^/]*\.txt|sitemap[^/]*\.xml|\.well-known/|openapi|mcp|rss|feed|ai\.txt)', p) or p.endswith('.md'))
                 digest = hashlib.sha256(raw).hexdigest()

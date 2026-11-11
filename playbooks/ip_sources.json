@@ -1,8 +1,12 @@
 {
- "GPTBot": "https://openai.com/gptbot.json",
- "OAI-SearchBot": "https://openai.com/searchbot.json",
- "ChatGPT-User": "https://openai.com/chatgpt-user.json",
- "PerplexityBot": "https://www.perplexity.com/perplexitybot.json",
- "Perplexity-User": "https://www.perplexity.com/perplexity-user.json",
- "Googlebot": "https://developers.google.com/static/search/apis/ipranges/googlebot.json"
+  "GPTBot": "https://openai.com/gptbot.json",
+  "OAI-SearchBot": "https://openai.com/searchbot.json",
+  "ChatGPT-User": "https://openai.com/chatgpt-user.json",
+  "PerplexityBot": "https://www.perplexity.com/perplexitybot.json",
+  "Perplexity-User": "https://www.perplexity.com/perplexity-user.json",
+  "Googlebot": "https://developers.google.com/static/search/apis/ipranges/googlebot.json",
+  "bingbot": "https://www.bing.com/toolbox/bingbot.json",
+  "ClaudeBot": "https://claude.com/crawling/bots.json",
+  "Claude-User": "https://claude.com/crawling/bots.json",
+  "Claude-SearchBot": "https://claude.com/crawling/bots.json"
 }

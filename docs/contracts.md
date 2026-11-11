@@ -46,22 +46,24 @@ items; свежая ошибка 403 не оживляет старую стат
 ## Signals v1
 
 Все сигналы содержат numbers и source_rows. Поиск — последнее полное доступное
-окно GSC. Striking distance: позиции 8–20, показы >= min_impressions.
-Low CTR: позиция <=10, CTR < low_ctr; пороги в конфиге.
+окно GSC. Striking distance: позиции 8–20, показы >= striking_distance_min_impressions (20).
+Low CTR: позиция <=10, CTR < low_ctr и >= low_ctr_min_impressions (50); пороги в конфиге.
 No impressions: только статьи, возраст >=28 дней на КОНЕЦ окна; отсутствие
 возвращённой строки не равно измеренному нулю (лимиты GSC). Когорты 28+,
 14–27, 7–13, 0–6, after window, unknown показывают числа; доля вычисляется
 только для 28+. Молодые статьи и страницы с неизвестной датой исключены.
-Two pages one query: реальная GSC page×query, минимум две страницы с показами.
+Two pages one query: реальная GSC page×query, минимум две страницы с >= two_pages_min_impressions (10) каждая.
 Cluster traction: наблюдаемые показы/клики по Wordstat cluster, иначе по разделу;
 это спрос в окне, а не доказанный рост или причинный эффект.
 Not in Yandex index: только явный отрицательный статус indexing sample
 NOT_INDEXED / EXCLUDED / NOT_IN_SEARCH. Отсутствие в samples не доказательство.
 Нынешние сохранённые материалы не дают полного списка отрицательных статусов;
 правило может возвращать 0. История и summary при этом доступны для анализа.
-AI demand: известные AI семейства кроме обычных поисковиков; число запросов,
+AI demand: только search index/user-triggered fetch, кроме обычных поисковиков
+и spoofed; >= ai_robot_min_hits (3), один сигнал на страницу; число запросов,
 с отдельным verified_requests. Unverified demand — заявленный UA, не доверие.
-Robot 404: все классифицированные/неизвестные боты, включая spoofed.
+Robot 404: сгруппированы по пути, >= robot_404_min_hits (3). Probe-пути
+(.env, .git, wp-*, SQL/backup и подобные) вынесены в один probe_noise.
 Tech issues: metadata, H1, canonical, JSON-LD, noindex, тонкий текст,
 дубли, сироты, отсутствующие файлы и внутренние ссылки.
 Agent trust: verified user-triggered fetch + локальные panel citations.
@@ -73,9 +75,10 @@ New bot: неизвестная bot/agent UA семья, >=2 дня наблюд
 
 Список классов в ai_bots.yaml — данные, не проверка подлинности. Обычные
 поисковые боты отделены в non_ai_bots.json. IP-источники издателей перечислены
-в ip_sources.json. Отсутствующий диапазон, семейство без опубликованного
-источника, IP без заголовка или снимок диапазонов старше 30 дней → unverified.
-Диапазон от будущей даты не подтверждает исторический запрос. Семейства
+в ip_sources.json. Ближайший снимок выбирается в пределах ±30 дней; при
+равном расстоянии предпочтение прошлому. Нет совпадения IP, нет заголовка
+или нет близкого снимка → unverified. Нет опубликованного источника →
+unavailable (также отмечено verification в снимке диапазонов). Семейства
 проверяются раздельно. Запросы .env, .git, SQL/backup, wp-admin под известным
 AI/бот именем → spoofed. Доверять X-Forwarded-For можно только если входящий
 proxy перезаписывает его; эту предпосылку сервер должен обеспечивать сам.
@@ -94,3 +97,30 @@ engine.nightly собирает доступные источники, зате�
 Даже при таком результате HTML и digest записаны. Секреты не печатаются;
 ошибки API содержат только HTTP-код или безопасную категорию сетевой ошибки.
 Никаких уведомлений, webhooks, установки launchd или изменений сайта.
+
+## Round 2
+
+source_status хранит прежние записи свежести; миграция сохраняет данные и rowid.
+stat_registry пуст и зарезервирован для опубликованных чисел: id, name, value,
+unit, sample_size, method, source, as_of, page, note.
+Эксперименты импортируются из sites/<site>/import/effects.json, а не .ref.
+Recon — только локальный импорт backfill 2026-11-10; его first samples явно
+неполные. Последующий index evidence — свои wm_in_search_samples.json в raw.
+
+Каждый API endpoint изолирован; {endpoint, error_class} без текста ошибки
+сохраняется в *_manifest.json и collection.json. Пагинация сохраняет полученные
+страницы даже при сбое следующей. Метрика продолжает после ошибки Вебмастера.
+Команда collect --live возвращает 1 только после обработки всех источников.
+
+Отчёт: totals и top 10 по score каждого правила, четыре статуса роботов по
+семействам за 7 дней. Два последних окна GSC сравниваются по разделам и
+страницам без суммирования окон; top 10 страниц по абсолютной разнице кликов,
+затем показов. Отсутствующие строки помечены; это не доказанный ноль.
+Если окно одно, это явно написано. Скользящие окна могут пересекаться.
+
+Официальные дополнения к IP-снимку 2026-11-12 прочитаны 12.11.2026:
+[Bing](https://www.bing.com/toolbox/bingbot.json),
+[Claude](https://claude.com/crawling/bots.json),
+[описание Anthropic](https://privacy.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler).
+Один общий список Claude применяется к ClaudeBot/Claude-User/Claude-SearchBot:
+издатель подтверждает происхождение от Anthropic, класс запроса определяется UA.

@@ -1,0 +1,283 @@
+{
+ "hosts": [
+  {
+   "host_id": "https:lida-ai.ru:443",
+   "verified": true,
+   "main_mirror": null,
+   "host_data_status": null,
+   "unicode_host_url": "https://lida-ai.ru/"
+  }
+ ],
+ "host_info": {
+  "status": 200,
+  "host_data_status": "OK",
+  "main_mirror": null,
+  "verified": true,
+  "host_display_name": "lida-ai.ru"
+ },
+ "summary": {
+  "sqi": 0,
+  "excluded_pages_count": 0,
+  "searchable_pages_count": 1,
+  "site_problems": {
+   "RECOMMENDATION": 2,
+   "POSSIBLE_PROBLEM": 1
+  }
+ },
+ "in_search_history": [
+  [
+   "2026-09-15",
+   1
+  ],
+  [
+   "2026-09-19",
+   1
+  ],
+  [
+   "2026-09-20",
+   1
+  ],
+  [
+   "2026-09-23",
+   1
+  ],
+  [
+   "2026-09-24",
+   1
+  ],
+  [
+   "2026-09-26",
+   1
+  ],
+  [
+   "2026-09-28",
+   1
+  ],
+  [
+   "2026-09-30",
+   1
+  ],
+  [
+   "2026-10-02",
+   1
+  ],
+  [
+   "2026-10-05",
+   1
+  ],
+  [
+   "2026-10-07",
+   1
+  ]
+ ],
+ "indexing_history": {
+  "HTTP_2XX": [
+   [
+    "2026-09-27",
+    1
+   ],
+   [
+    "2026-09-28",
+    1
+   ],
+   [
+    "2026-09-29",
+    1
+   ],
+   [
+    "2026-09-30",
+    1
+   ],
+   [
+    "2026-10-06",
+    1
+   ]
+  ]
+ },
+ "events_history": {
+  "REMOVED_FROM_SEARCH": [
+   [
+    "2026-09-26",
+    0
+   ],
+   [
+    "2026-09-28",
+    0
+   ],
+   [
+    "2026-09-30",
+    0
+   ],
+   [
+    "2026-10-02",
+    0
+   ],
+   [
+    "2026-10-05",
+    0
+   ],
+   [
+    "2026-10-07",
+    0
+   ]
+  ],
+  "APPEARED_IN_SEARCH": [
+   [
+    "2026-09-26",
+    0
+   ],
+   [
+    "2026-09-28",
+    0
+   ],
+   [
+    "2026-09-30",
+    0
+   ],
+   [
+    "2026-10-02",
+    0
+   ],
+   [
+    "2026-10-05",
+    0
+   ],
+   [
+    "2026-10-07",
+    0
+   ]
+  ]
+ },
+ "in_search_samples": {
+  "status": 200,
+  "count": 69,
+  "first": [
+   "https://lida-ai.ru/blog/korporativnaya-pochta-chto-eto/",
+   "https://lida-ai.ru/blog/zhaloby-na-spam/",
+   "https://lida-ai.ru/blog/stoimost-obrabotki-otvetov/",
+   "https://lida-ai.ru/blog/reputatsiya-domena-i-ip/",
+   "https://lida-ai.ru/blog/lead-scoring-chto-eto/",
+   "https://lida-ai.ru/blog/tochka-bezubytochnosti-rassylki/",
+   "https://lida-ai.ru/blog/ltv-b2b-okupaemost-rassylki/",
+   "https://lida-ai.ru/blog/cac-b2b-rassylka/",
+   "https://lida-ai.ru/blog/kejs-goskontrakty-19-kval-lidov/",
+   "https://lida-ai.ru/blog/dopustimaya-tsena-kval-lida-ot-marzhi/",
+   "https://lida-ai.ru/blog/rassylka-po-1000-kompaniyam/",
+   "https://lida-ai.ru/blog/krupnye-klienty-dlya-logistiki/",
+   "https://lida-ai.ru/blog/klienty-dlya-kiberbezopasnosti-b2b/",
+   "https://lida-ai.ru/blog/stoimost-cold-outreach-svoimi-silami/",
+   "https://lida-ai.ru/blog/kholodnoe-pismo-direktoru/"
+  ]
+ },
+ "events_samples": {
+  "count": 68,
+  "by": {
+   "('APPEARED_IN_SEARCH', None)": 68
+  },
+  "dates": [
+   "2026-10-10",
+   "2026-11-02",
+   "2026-11-05"
+  ]
+ },
+ "diagnostics": {
+  "NO_REGIONS": "PRESENT",
+  "NOT_IN_SPRAV": "PRESENT",
+  "NO_METRIKA_COUNTER_BINDING": "PRESENT"
+ },
+ "queries_history": {
+  "TOTAL_SHOWS": [
+   [
+    "2026-11-01",
+    0.0
+   ],
+   [
+    "2026-11-02",
+    0.0
+   ],
+   [
+    "2026-11-03",
+    0.0
+   ],
+   [
+    "2026-11-04",
+    0.0
+   ],
+   [
+    "2026-11-05",
+    0.0
+   ],
+   [
+    "2026-11-06",
+    0.0
+   ],
+   [
+    "2026-11-07",
+    0.0
+   ],
+   [
+    "2026-11-08",
+    0.0
+   ],
+   [
+    "2026-11-09",
+    0.0
+   ],
+   [
+    "2026-11-10",
+    0.0
+   ]
+  ],
+  "TOTAL_CLICKS": [
+   [
+    "2026-11-01",
+    0.0
+   ],
+   [
+    "2026-11-02",
+    0.0
+   ],
+   [
+    "2026-11-03",
+    0.0
+   ],
+   [
+    "2026-11-04",
+    0.0
+   ],
+   [
+    "2026-11-05",
+    0.0
+   ],
+   [
+    "2026-11-06",
+    0.0
+   ],
+   [
+    "2026-11-07",
+    0.0
+   ],
+   [
+    "2026-11-08",
+    0.0
+   ],
+   [
+    "2026-11-09",
+    0.0
+   ],
+   [
+    "2026-11-10",
+    0.0
+   ]
+  ]
+ },
+ "sitemaps": [
+  {
+   "sitemap_url": "https://lida-ai.ru/sitemap-index.xml",
+   "last_access_date": "2026-10-09T23:42:21.000+03:00",
+   "errors_count": 0,
+   "urls_count": 1,
+   "sitemap_type": "INDEX_SITEMAP"
+  }
+ ]
+}

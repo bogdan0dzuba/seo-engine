@@ -47,8 +47,9 @@ def main(argv=None):
         result = report(cfg, args.date)
     else:
         from engine.collect.access_log import fetch_ranges
-        fetch_ranges(args.date)
-        result = {'date': args.date, 'ip_ranges': 'saved'}
+        errors = fetch_ranges(args.date)
+        print(json.dumps({'date': args.date, 'ip_ranges': 'saved', 'errors': errors}))
+        return 1 if errors else 0
     print(json.dumps(result, ensure_ascii=False))
     return 0
 

@@ -16,10 +16,15 @@ def saved(cfg, date, backfill=False):
             if not (dest/f.name).exists():
                 shutil.copyfile(f, dest/f.name)
     evidence = Path(cfg.get('index_evidence', '')).expanduser()
-    if evidence.is_file() and cfg.get('index_evidence_date', date) <= date:
+    if backfill and evidence.is_file() and cfg['index_evidence_date'] <= date:
         dest = cfg['data']/'raw'/cfg.get('index_evidence_date', date)/'wm_index_check.json'
-        if not dest.exists():
-            write_json(dest, read_json(evidence))
+        if not dest.with_name('wm_in_search_samples.json').exists():
+            imported = read_json(evidence)
+            write_json(dest, imported)
+            sample = imported.get('in_search_samples', {})
+            write_json(dest.with_name('wm_in_search_samples.json'), {
+                'samples': [{'url': url} for url in sample.get('first', [])],
+                'count': sample.get('count'), 'complete': False, 'imported_from': str(evidence)})
 
 
 def collect(cfg, date, live=False, backfill=False, start=None, end=None):
@@ -27,7 +32,7 @@ def collect(cfg, date, live=False, backfill=False, start=None, end=None):
         saved(cfg, date, backfill)
     folder = cfg['data']/'raw'/date
     folder.mkdir(parents=True, exist_ok=True)
-    outcomes = {}
+    outcomes = {'errors': []}
     if live:
         end = end or (dt.date.fromisoformat(date)-dt.timedelta(days=3)).isoformat()
         start = start or (dt.date.fromisoformat(end)-dt.timedelta(days=27)).isoformat()
@@ -35,13 +40,15 @@ def collect(cfg, date, live=False, backfill=False, start=None, end=None):
             raise ValueError('start after end')
         for name, module in [('yandex', yandex), ('google', google)]:
             try:
-                module.collect(cfg, folder, start, end)
-                outcomes[name] = 'live'
+                errors = module.collect(cfg, folder, start, end) or []
+                outcomes['errors'].extend(errors)
+                outcomes[name] = 'partial' if errors else 'live'
             except CollectionError as e:
-                outcomes[name] = str(e)
+                outcomes[name] = 'failed'
+                outcomes['errors'].append({'endpoint': name, 'error_class': type(e).__name__})
                 # No retry / alternate credential route after a guard or network error.
     else:
-        outcomes = {'yandex': 'saved snapshots; live not requested', 'google': 'saved snapshots; live not requested'}
+        outcomes = {'errors': [], 'yandex': 'saved snapshots; live not requested', 'google': 'saved snapshots; live not requested'}
     for key in ('funnel_digest', 'site_digest'):
         if key in cfg:
             f = Path(cfg[key].format(date=date)).expanduser()

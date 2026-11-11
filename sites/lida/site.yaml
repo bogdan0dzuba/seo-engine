@@ -35,9 +35,9 @@
     "~/lida/data/wordstat/clusters/latest.json",
     "~/lida/data/wordstat/clusters-20261111/latest.json"
   ],
-  "index_evidence": "~/lida-ops/codex-results/seo-engine-recon-20261110/data/wm_index_check.20261110.json",
+  "index_evidence": "sites/lida/import/wm_index_check.20261110.json",
   "index_evidence_date": "2026-11-10",
-  "effects_file": ".ref/EFFECTS.md",
+  "effects_file": "sites/lida/import/effects.json",
   "internal_user_agents": [
     "Headless",
     "Playwright",
@@ -60,13 +60,11 @@
   "ai_referrers": [
     "chatgpt.com",
     "chat.openai.com",
-    "openai.com",
     "perplexity.ai",
     "claude.ai",
     "gemini.google.com",
     "copilot.microsoft.com",
     "alice.yandex.ru",
-    "ya.ru",
     "deepseek.com",
     "gigachat.ru",
     "you.com",
@@ -75,9 +73,13 @@
     "duck.ai"
   ],
   "signal_thresholds": {
-    "min_impressions": 1,
     "low_ctr": 0.02,
-    "new_bot_min_hits": 10
+    "new_bot_min_hits": 10,
+    "striking_distance_min_impressions": 20,
+    "low_ctr_min_impressions": 50,
+    "two_pages_min_impressions": 10,
+    "ai_robot_min_hits": 3,
+    "robot_404_min_hits": 3
   },
   "backfill_start": "2026-11-05"
 }

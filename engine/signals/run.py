@@ -4,11 +4,12 @@ import datetime as dt
 import json
 from engine.config import ROOT, read_json, page_path, write_json
 from engine.collect.freshness import check
+from engine.collect.access_log import is_probe
 from engine.store.db import connect, upsert
 
 RULES = ('striking_distance', 'low_ctr', 'no_impressions', 'two_pages_one_query', 'cluster_traction',
          'not_in_yandex_index', 'ai_robot_demand', 'robot_404', 'tech_issues', 'stale_source',
-         'agent_trust_page', 'new_bot_family')
+         'agent_trust_page', 'new_bot_family', 'probe_noise')
 
 
 def cohort(published, end):
@@ -48,8 +49,8 @@ def cohorts(db, cfg, date):
 
 def freshness(db, date, cfg=None):
     result = []
-    for source in [r[0] for r in db.execute('SELECT DISTINCT source FROM stat_registry WHERE snapshot<=?', (date,))]:
-        rows = db.execute('SELECT * FROM stat_registry WHERE source=? AND snapshot<=? ORDER BY newest_real DESC,snapshot DESC', (source, date)).fetchall()
+    for source in [r[0] for r in db.execute('SELECT DISTINCT source FROM source_status WHERE snapshot<=?', (date,))]:
+        rows = db.execute('SELECT * FROM source_status WHERE source=? AND snapshot<=? ORDER BY newest_real DESC,snapshot DESC', (source, date)).fetchall()
         r = rows[0]
         result.append(dict(source=source, **check(r['newest_real'], date), evidence=json.loads(r['evidence'])))
     expected = ['gsc', 'yandex', 'metrika', 'access_log', 'funnel', 'site-digest', 'crawl']
@@ -64,7 +65,6 @@ def freshness(db, date, cfg=None):
 def run(cfg, date):
     db = connect(cfg)
     thresholds = cfg.get('signal_thresholds', {})
-    minimum = thresholds.get('min_impressions', 1)
     ordinary_bots = set(read_json(ROOT/'playbooks/non_ai_bots.json'))
     p_rows, window = window_rows(db, 'page_day', date)
     q_rows, _ = window_rows(db, 'query_day', date)
@@ -77,10 +77,10 @@ def run(cfg, date):
             imp, clicks, pos = row['impressions'], row['clicks'], row['position']
             refs = [{'table': 'page_day', 'rowid': row['row_id'], 'raw': row['evidence']}]
             nums = {'impressions': imp, 'clicks': clicks, 'position': pos, 'window': window, 'source': 'gsc'}
-            if imp >= minimum and pos is not None:
-                if 8 <= pos <= 20:
+            if imp > 0 and pos is not None:
+                if 8 <= pos <= 20 and imp >= thresholds.get('striking_distance_min_impressions', 20):
                     emit('striking_distance', row['page'], imp*(21-pos), nums, refs)
-                if pos <= 10 and clicks/imp < thresholds.get('low_ctr', .02):
+                if pos <= 10 and imp >= thresholds.get('low_ctr_min_impressions', 50) and clicks/imp < thresholds.get('low_ctr', .02):
                     emit('low_ctr', row['page'], imp, dict(nums, ctr=clicks/imp), refs)
         if window:
             seen = {r['page'] for r in p_rows if r['impressions'] > 0}
@@ -90,7 +90,7 @@ def run(cfg, date):
                          [{'table': 'page', 'rowid': p['row_id']}, {'table': 'page_day', 'source': 'gsc', 'window': window}])
         queries = collections.defaultdict(list)
         for r in q_rows:
-            if r['page'] and r['impressions'] >= minimum:
+            if r['page'] and r['impressions'] >= thresholds.get('two_pages_min_impressions', 10):
                 queries[r['query']].append(r)
         for query, rows in queries.items():
             if len({r['page'] for r in rows}) > 1:
@@ -113,8 +113,12 @@ def run(cfg, date):
         start = (dt.date.fromisoformat(date)-dt.timedelta(days=6)).isoformat()
         bots = [dict(r) for r in db.execute('SELECT rowid AS row_id,* FROM bot_day WHERE date BETWEEN ? AND ?', (start, date))]
         demand, trust, notfound = collections.defaultdict(list), collections.defaultdict(list), collections.defaultdict(list)
+        probes = []
         for r in bots:
-            if r['family'] not in ordinary_bots and r['class'] in ('training crawler', 'search index', 'user-triggered fetch', 'coding agents') and r['verified'] != 'spoofed':
+            if is_probe(r['page']):
+                probes.append(r)
+                continue
+            if r['family'] not in ordinary_bots and r['class'] in ('search index', 'user-triggered fetch') and r['verified'] != 'spoofed':
                 demand[r['page']].append(r)
             if r['class'] == 'user-triggered fetch' and r['verified'] == 'verified':
                 trust[r['page']].append(r)
@@ -123,7 +127,12 @@ def run(cfg, date):
         for rule, mapping in [('ai_robot_demand', demand), ('agent_trust_page', trust), ('robot_404', notfound)]:
             for page, rows in mapping.items():
                 n = sum(r['hits'] for r in rows)
+                minimum = thresholds.get('ai_robot_min_hits', 3) if rule == 'ai_robot_demand' else thresholds.get('robot_404_min_hits', 3) if rule == 'robot_404' else 1
+                if n < minimum:
+                    continue
                 emit(rule, page, n, {'requests': n, 'verified_requests': sum(r['hits'] for r in rows if r['verified'] == 'verified'), 'families': sorted({r['family'] for r in rows}), 'window': [start, date]}, [{'table': 'bot_day', 'rowid': r['row_id']} for r in rows])
+        if probes:
+            emit('probe_noise', 'all probe paths', sum(r['hits'] for r in probes), {'requests': sum(r['hits'] for r in probes), 'paths': len({r['page'] for r in probes}), 'window': [start, date]}, [{'table': 'bot_day', 'rowid': r['row_id']} for r in probes])
         panel = collections.defaultdict(list)
         for r in db.execute('SELECT rowid AS row_id,* FROM ai_panel WHERE date BETWEEN ? AND ?', (start, date)):
             for url in json.loads(r['cited_urls']):
@@ -155,7 +164,7 @@ def run(cfg, date):
                 emit('tech_issues', r['page'], len(issues), {'issues': issues, 'words': r['words'], 'crawl_date': crawl_date}, [{'table': 'crawl_page', 'rowid': r['row_id'], 'raw': r['evidence']}])
         for r in freshness(db, date, cfg):
             if r['status'] == 'STALE':
-                emit('stale_source', r['source'], r['age_days'] or 999, r, [{'table': 'stat_registry', 'source': r['source'], 'evidence': r['evidence']}])
+                emit('stale_source', r['source'], r['age_days'] or 999, r, [{'table': 'source_status', 'source': r['source'], 'evidence': r['evidence']}])
     result = {rule: db.execute('SELECT count(*) FROM signal WHERE date=? AND rule=?', (date, rule)).fetchone()[0] for rule in RULES}
     write_json(cfg['data']/'signals'/ (date+'.json'), [dict(r) for r in db.execute('SELECT * FROM signal WHERE date=? ORDER BY score DESC,rule,subject', (date,))])
     db.close()
