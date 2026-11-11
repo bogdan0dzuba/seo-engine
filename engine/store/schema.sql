@@ -1,0 +1,20 @@
+PRAGMA foreign_keys=ON;
+CREATE TABLE IF NOT EXISTS page (path TEXT PRIMARY KEY, section TEXT, published TEXT, cluster TEXT, current_crawl TEXT);
+-- Window aggregates are NOT daily facts. start/end and grain prevent false day attribution.
+CREATE TABLE IF NOT EXISTS page_day (source TEXT, start TEXT, end TEXT, page TEXT, dimension TEXT DEFAULT '', grain TEXT, impressions REAL, clicks REAL, position REAL, visits REAL, evidence TEXT, PRIMARY KEY(source,start,end,page,dimension));
+CREATE TABLE IF NOT EXISTS query_day (source TEXT, start TEXT, end TEXT, query TEXT, page TEXT DEFAULT '', grain TEXT, impressions REAL, clicks REAL, position REAL, evidence TEXT, PRIMARY KEY(source,start,end,query,page));
+CREATE TABLE IF NOT EXISTS index_day (date TEXT, page TEXT, state TEXT, source TEXT, evidence TEXT, PRIMARY KEY(date,page,source));
+CREATE TABLE IF NOT EXISTS bot_day (date TEXT, family TEXT, class TEXT, verified TEXT CHECK(verified IN ('verified','unverified','spoofed')), page TEXT, status INTEGER, hits INTEGER, special INTEGER, evidence TEXT, PRIMARY KEY(date,family,class,verified,page,status));
+CREATE TABLE IF NOT EXISTS ai_visibility (date TEXT, source TEXT, assistant TEXT, page TEXT, requests REAL, evidence TEXT, PRIMARY KEY(date,source,assistant,page));
+CREATE TABLE IF NOT EXISTS ai_panel (date TEXT, model TEXT, question_id TEXT, mentioned INTEGER, cited_urls TEXT, competitor_names TEXT, offer_phrase_found INTEGER, raw_answer_path TEXT, PRIMARY KEY(date,model,question_id));
+CREATE TABLE IF NOT EXISTS crawl_page (date TEXT, page TEXT, title TEXT, description TEXT, h1 TEXT, canonical TEXT, jsonld_types TEXT, words INTEGER, published TEXT, links TEXT, sha256 TEXT, issues TEXT, evidence TEXT, PRIMARY KEY(date,page));
+CREATE TABLE IF NOT EXISTS signal (date TEXT, rule TEXT, subject TEXT, score REAL, numbers TEXT, source_rows TEXT, PRIMARY KEY(date,rule,subject));
+CREATE TABLE IF NOT EXISTS proposal (id TEXT PRIMARY KEY, signal_date TEXT, rule TEXT, page TEXT, payload TEXT);
+CREATE TABLE IF NOT EXISTS decision (id TEXT PRIMARY KEY, proposal_id TEXT, date TEXT, decision TEXT, owner TEXT);
+CREATE TABLE IF NOT EXISTS experiment (id TEXT PRIMARY KEY, date TEXT, status TEXT, record TEXT, source TEXT);
+CREATE TABLE IF NOT EXISTS change_log (id TEXT PRIMARY KEY, experiment_id TEXT, date TEXT, page TEXT, before_hash TEXT, after_hash TEXT, record TEXT);
+CREATE TABLE IF NOT EXISTS effect (id TEXT PRIMARY KEY, experiment_id TEXT, date TEXT, metric TEXT, treatment REAL, control REAL, difference_in_differences REAL, evidence TEXT);
+CREATE TABLE IF NOT EXISTS stat_registry (source TEXT, snapshot TEXT, newest_real TEXT, status TEXT, evidence TEXT, PRIMARY KEY(source,snapshot));
+CREATE TABLE IF NOT EXISTS source_snapshot (snapshot TEXT, name TEXT, sha256 TEXT, path TEXT, PRIMARY KEY(snapshot,name));
+CREATE TABLE IF NOT EXISTS log_request (id TEXT PRIMARY KEY, date TEXT, family TEXT, class TEXT, verified TEXT, page TEXT, status INTEGER, special INTEGER, assistant TEXT, evidence TEXT);
+CREATE TABLE IF NOT EXISTS metric_day (source TEXT, start TEXT, end TEXT, dimension TEXT, key TEXT, payload TEXT, evidence TEXT, PRIMARY KEY(source,start,end,dimension,key));

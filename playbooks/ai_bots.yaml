@@ -1,0 +1,6 @@
+{
+ "training crawler": ["GPTBot", "ClaudeBot", "anthropic-ai", "CCBot", "Bytespider", "Google-CloudVertexBot", "GoogleOther", "Amazonbot", "meta-externalagent", "Applebot-Extended", "cohere-ai"],
+ "search index": ["OAI-SearchBot", "Claude-SearchBot", "PerplexityBot", "DuckAssistBot", "Googlebot", "Google-InspectionTool", "AdsBot-Google", "Mediapartners-Google", "YandexBot", "YandexAdditional", "bingbot", "Applebot", "DuckDuckBot", "Mail.RU", "Diffbot", "Timpibot"],
+ "user-triggered fetch": ["ChatGPT-User", "Claude-User", "Perplexity-User", "MistralAI-User", "meta-externalfetcher"],
+ "coding agents": ["OpenAI-Codex", "Codex", "Cursor", "Claude-Code", "Windsurf", "Goose"]
+}
