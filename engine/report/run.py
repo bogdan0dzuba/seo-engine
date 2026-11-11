@@ -18,7 +18,7 @@ def table(rows):
 def report(cfg, date):
     db = connect(cfg)
     cohort_rows, window = cohorts(db, cfg, date)
-    fresh = freshness(db, date)
+    fresh = freshness(db, date, cfg)
     signals = [dict(r) for r in db.execute('SELECT * FROM signal WHERE date=? ORDER BY score DESC,rule,subject', (date,))]
     by_rule = [{'rule': rule, 'count': sum(r['rule'] == rule for r in signals)} for rule in RULES]
     pages, _ = window_rows(db, 'page_day', date)

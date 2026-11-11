@@ -30,12 +30,16 @@ def main(argv=None):
         from engine.store.load import load as load_data
         result = load_data(cfg, args.date)
     elif args.command == 'signals':
-        from engine.signals.run import run
+        from engine.signals.run import run, freshness
         from engine.store.db import connect
         result = run(cfg, args.date)
         print(json.dumps(result, ensure_ascii=False))
         if result['stale_source']:
-            print('STALE: source freshness check failed; inspect report/stat_registry', file=sys.stderr)
+            db = connect(cfg)
+            for source in freshness(db, args.date, cfg):
+                if source['status'] == 'STALE':
+                    print('STALE: '+source['source']+' newest_real='+str(source['newest_real']), file=sys.stderr)
+            db.close()
             return 2
         return 0
     elif args.command == 'report':

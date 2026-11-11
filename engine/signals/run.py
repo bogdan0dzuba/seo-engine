@@ -46,13 +46,14 @@ def cohorts(db, cfg, date):
     return list(groups.values()), window
 
 
-def freshness(db, date):
+def freshness(db, date, cfg=None):
     result = []
     for source in [r[0] for r in db.execute('SELECT DISTINCT source FROM stat_registry WHERE snapshot<=?', (date,))]:
         rows = db.execute('SELECT * FROM stat_registry WHERE source=? AND snapshot<=? ORDER BY newest_real DESC,snapshot DESC', (source, date)).fetchall()
         r = rows[0]
         result.append(dict(source=source, **check(r['newest_real'], date), evidence=json.loads(r['evidence'])))
-    expected = ('gsc', 'yandex', 'metrika', 'access_log', 'funnel', 'site-digest', 'crawl')
+    expected = ['gsc', 'yandex', 'metrika', 'access_log', 'funnel', 'site-digest', 'crawl']
+    expected += ['wordstat_'+str(i) for i, _ in enumerate((cfg or {}).get('wordstat_files', []))]
     found = {r['source'] for r in result}
     for source in expected:
         if source not in found:
@@ -152,7 +153,7 @@ def run(cfg, date):
             issues = json.loads(r['issues'])
             if issues:
                 emit('tech_issues', r['page'], len(issues), {'issues': issues, 'words': r['words'], 'crawl_date': crawl_date}, [{'table': 'crawl_page', 'rowid': r['row_id'], 'raw': r['evidence']}])
-        for r in freshness(db, date):
+        for r in freshness(db, date, cfg):
             if r['status'] == 'STALE':
                 emit('stale_source', r['source'], r['age_days'] or 999, r, [{'table': 'stat_registry', 'source': r['source'], 'evidence': r['evidence']}])
     result = {rule: db.execute('SELECT count(*) FROM signal WHERE date=? AND rule=?', (date, rule)).fetchone()[0] for rule in RULES}

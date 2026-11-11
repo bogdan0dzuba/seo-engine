@@ -194,6 +194,29 @@ class EngineTest(unittest.TestCase):
         counts_ = run(self.cfg, self.date)
         self.assertEqual(counts_['not_in_yandex_index'], 0)
 
+    def test_explicit_negative_index_state_has_evidence(self):
+        self.seed()
+        crawl(self.cfg, self.date)
+        write_json(self.folder/'wm_indexing_samples.json', {'samples': [{'url': 'https://second.test/articles/old/', 'status': 'EXCLUDED', 'http_code': 200}]})
+        load(self.cfg, self.date)
+        result = run(self.cfg, self.date)
+        self.assertEqual(result['not_in_yandex_index'], 1)
+        db = connect(self.cfg)
+        row = db.execute("SELECT * FROM signal WHERE rule='not_in_yandex_index'").fetchone()
+        self.assertEqual(row['subject'], '/articles/old/')
+        self.assertTrue(json.loads(row['source_rows'])[0]['rowid'])
+        db.close()
+
+    def test_ai_referrer_visits_aggregate_without_mixing_http_requests(self):
+        payload = {'query': {'dimensions': ['ym:s:date', 'ym:s:startURL', 'ym:s:referer'], 'metrics': ['ym:s:visits'], 'date1': self.date, 'date2': self.date},
+                   'data': [{'dimensions': [{'name': self.date}, {'name': 'https://second.test/'}, {'name': 'https://chatgpt.com/'+str(i)}], 'metrics': [i]} for i in (2, 3)]}
+        write_json(self.folder/'ym_referrers.json', payload)
+        load(self.cfg, self.date)
+        db = connect(self.cfg)
+        self.assertEqual(db.execute("SELECT requests FROM ai_visibility WHERE source='metrika'").fetchone()[0], 5)
+        self.assertTrue(any(r['source'] == 'wordstat_0' and r['status'] == 'STALE' for r in freshness(db, self.date, dict(self.cfg, wordstat_files=['missing.json']))))
+        db.close()
+
     def test_html_metadata_visible_text_and_schema(self):
         self.seed()
         result = crawl(self.cfg, self.date)

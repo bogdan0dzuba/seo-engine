@@ -27,6 +27,8 @@ def request(url, token=None, body=None, scheme='OAuth', form=False):
         with urllib.request.urlopen(urllib.request.Request(url, data=data, headers=headers), timeout=30) as r:
             return json.load(r)
     except urllib.error.HTTPError as e:
-        raise CollectionError('API HTTP '+str(e.code)) from None
+        code = e.code
+        e.close()
+        raise CollectionError('API HTTP '+str(code)) from None
     except (OSError, ValueError):
         raise CollectionError('Network or response unavailable') from None

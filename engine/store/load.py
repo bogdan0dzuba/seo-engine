@@ -100,6 +100,7 @@ def load_wm(db, payloads, folder):
 
 def load_metrika(db, payloads, folder, cfg):
     newest = []
+    ai_referrals = {}
     for name, p in payloads.items():
         if not name.startswith('ym_'):
             continue
@@ -120,7 +121,12 @@ def load_metrika(db, payloads, folder, cfg):
             if date and name == 'ym_referrers':
                 domain = assistant(d.get('ym:s:referer', ''), cfg['ai_referrers'])
                 if domain:
-                    upsert(db, 'ai_visibility', date=date, source='metrika', assistant=domain, page=page_path(d.get('ym:s:startURL', '/')), requests=m.get('ym:s:visits', 0), evidence=ev)
+                    key = (date, domain, page_path(d.get('ym:s:startURL', '/')))
+                    entry = ai_referrals.setdefault(key, {'visits': 0, 'evidence': []})
+                    entry['visits'] += m.get('ym:s:visits', 0)
+                    entry['evidence'].append(ev)
+    for (date, domain, page), entry in ai_referrals.items():
+        upsert(db, 'ai_visibility', date=date, source='metrika', assistant=domain, page=page, requests=entry['visits'], evidence=J(entry['evidence']))
     if 'ym_daily' in payloads:
         register(db, 'metrika', folder.name, max(newest, default=None), str(folder/'ym_daily.json'), folder.name)
 
@@ -168,13 +174,23 @@ def load_extra(db, payloads, folder, cfg):
 
 
 def aggregate_logs(db):
-    # Recompute from durable fingerprints, not only the current short log.
-    db.execute('DELETE FROM bot_day')
-    db.execute('''INSERT INTO bot_day SELECT date,family,class,verified,page,status,count(*),max(special),min(evidence)
-                  FROM log_request WHERE family!='other' GROUP BY date,family,class,verified,page,status''')
-    db.execute("DELETE FROM ai_visibility WHERE source='access_log'")
-    db.execute('''INSERT INTO ai_visibility SELECT date,'access_log',assistant,page,count(*),min(evidence)
-                  FROM log_request WHERE assistant!='' GROUP BY date,assistant,page''')
+    # Refresh from durable fingerprints while preserving rowids used in provenance.
+    rows = db.execute("""SELECT date,family,class,verified,page,status,count(*) AS hits,
+                         max(special) AS special,min(evidence) AS evidence FROM log_request
+                         WHERE family!='other' GROUP BY date,family,class,verified,page,status""").fetchall()
+    for row in rows:
+        upsert(db, 'bot_day', **dict(row))
+    db.execute("""DELETE FROM bot_day WHERE NOT EXISTS (SELECT 1 FROM log_request r
+                  WHERE r.date=bot_day.date AND r.family=bot_day.family AND r.class=bot_day.class
+                  AND r.verified=bot_day.verified AND r.page=bot_day.page AND r.status=bot_day.status)""")
+    ai_rows = db.execute("""SELECT date,'access_log' AS source,assistant,page,count(*) AS requests,
+                            min(evidence) AS evidence FROM log_request WHERE assistant!=''
+                            GROUP BY date,assistant,page""").fetchall()
+    for row in ai_rows:
+        upsert(db, 'ai_visibility', **dict(row))
+    db.execute("""DELETE FROM ai_visibility WHERE source='access_log' AND NOT EXISTS
+                  (SELECT 1 FROM log_request r WHERE r.date=ai_visibility.date
+                   AND r.assistant=ai_visibility.assistant AND r.page=ai_visibility.page)""")
 
 
 def load(cfg, date):
