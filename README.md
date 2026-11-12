@@ -5,13 +5,17 @@
 письма и сообщения не отправляет, модели не вызывает. Supabase не используется.
 
 ```sh
+# Создать конфиг, затем указать доступные файлы/источники по руководству ниже.
+python3 -m engine.cli init-site --site mysite --domain https://example.org
 # В этом checkout данные остаются внутри разрешённой папки.
-export SEO_ENGINE_DATA="$PWD/.data/lida"
-python3 -m engine.cli collect --site lida --date 2026-11-12 --backfill
-python3 -m engine.cli crawl --site lida --date 2026-11-12
-python3 -m engine.cli load --site lida --date 2026-11-12
-python3 -m engine.cli signals --site lida --date 2026-11-12
-python3 -m engine.cli report --site lida --date 2026-11-12
+export SEO_ENGINE_DATA="$PWD/.data/mysite"
+python3 -m engine.cli collect --site mysite --date 2026-11-12 --backfill
+python3 -m engine.cli crawl --site mysite --date 2026-11-12
+python3 -m engine.cli load --site mysite --date 2026-11-12
+python3 -m engine.cli signals --site mysite --date 2026-11-12
+python3 -m engine.cli propose --site mysite --date 2026-11-12
+python3 -m engine.cli card --site mysite --date 2026-11-12
+python3 -m engine.cli report --site mysite --date 2026-11-12
 python3 -m unittest
 ```
 
@@ -31,14 +35,16 @@ python3 -m unittest
 `engine.nightly` выполняет все стадии, включая отчёт после ошибки свежести:
 
 ```sh
-python3 -m engine.nightly --site lida --live
+python3 -m engine.nightly --site mysite --live
 ```
 
-`sites/<name>/site.yaml` — JSON-совместимый YAML. Для другого сайта достаточно
-одного такого конфига: домен, разделы, каталог файлов, начальный sitemap,
-источники и имена Keychain. Все пути данных берутся из конфига, кроме
-явного `SEO_ENGINE_DATA`. По умолчанию для Лиды — `~/seo-engine-data/lida/`.
-Миниатюрный другой домен проходит весь CLI в `tests/test_engine.py`.
+## Подключить другой проект
+
+Создайте конфиг: `python3 -m engine.cli init-site --site mysite --domain https://example.org`.
+Пошаговое руководство: [подключить второй сайт за час](docs/ADD_A_SITE.md).
+Минимум — домен, разделы и каталог данных; источники без настроек отключены.
+Пояснения полей — [FIELDS.md](sites/_template/FIELDS.md). Для стартового примера
+выше сначала создайте конфиг и добавьте доступные локальные файлы/источники.
 
 Живой GSC использует системные macOS `security` и `openssl`: RSA-ключ проходит
 в OpenSSL через анонимный pipe, никогда не записывается в файл или лог.
@@ -55,13 +61,13 @@ Yandex OAuth-токен также читается только во время
 не удваивают одинаковые запросы. IP берётся из настроенного доверенного proxy
 заголовка, не из адреса туннеля. См. [контракты](docs/contracts.md).
 
-IP-диапазоны обновляются отдельно: `python3 -m engine.cli ip-ranges --site lida`.
+IP-диапазоны обновляются отдельно: `python3 -m engine.cli ip-ranges --site mysite`.
 Проверка использует ближайший IP-снимок в пределах ±30 дней от запроса.
 Семейства без опубликованных диапазонов получают unavailable. В отчёте
 verified/unverified/unavailable/spoofed показаны по каждому семейству. См. `playbooks/ip_sources.json` и датированные файлы.
 
-Шаблон launchd [в репозитории](docs/ru.seo-engine.lida.nightly.plist): заменить
-`__PYTHON3__`, `__REPOSITORY__`, `__DATA_DIRECTORY__`; **не установлен**.
+Установщик ночной задачи: `ops/install-nightly.sh install mysite 5 40`.
+Он использует общий [шаблон launchd](docs/nightly.plist); в этой задаче **не запускался**.
 Результаты реального прогона и ограничения — [REPORT.md](REPORT.md).
 
 Свежесть хранится в source_status; stat_registry — пустой реестр опубликованных
@@ -70,3 +76,10 @@ verified/unverified/unavailable/spoofed показаны по каждому с�
 Пороги сигналов заданы в site.yaml; отчёт показывает totals и top 10 каждого
 правила, отдельную сводку probe_noise и изменение двух последних окон GSC
 по разделам и страницам (скользящие окна могут пересекаться).
+
+Этап предложений: `propose` сохраняет черновики в таблицу proposal и
+`<data>/proposals/<date>.json`; `card` — один выбор low/medium в неделю в
+`<data>/cards/<week-monday>.{json,txt}`. High выводится отдельно как «Нужно согласие».
+Очки = охват × потенциал × уверенность; это приоритет, а не прогноз.
+Страницы моложе 28 дней на конец окна, с неизвестной датой и участники активных
+опытов/контроля исключены. Запись опыта — только заготовка; публикации нет.

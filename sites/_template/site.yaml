@@ -1,0 +1,5 @@
+{
+  "domain": "https://example.org",
+  "sections": ["/", "/blog/"],
+  "data_dir": ".data/mysite"
+}

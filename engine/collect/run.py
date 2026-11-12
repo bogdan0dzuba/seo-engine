@@ -1,7 +1,7 @@
 import datetime as dt
 import shutil
 from pathlib import Path
-from engine.config import read_json, write_json
+from engine.config import read_json, write_json, enabled_sources
 from engine.collect import access_log, google, yandex
 from engine.collect.http import CollectionError
 
@@ -39,6 +39,10 @@ def collect(cfg, date, live=False, backfill=False, start=None, end=None):
         if start > end:
             raise ValueError('start after end')
         for name, module in [('yandex', yandex), ('google', google)]:
+            sources = enabled_sources(cfg)
+            if not ({'gsc'} if name == 'google' else {'yandex', 'metrika'}) & sources:
+                outcomes[name] = 'disabled'
+                continue
             try:
                 errors = module.collect(cfg, folder, start, end) or []
                 outcomes['errors'].extend(errors)

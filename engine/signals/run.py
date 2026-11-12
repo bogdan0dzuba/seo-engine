@@ -2,7 +2,7 @@
 import collections
 import datetime as dt
 import json
-from engine.config import ROOT, read_json, page_path, write_json
+from engine.config import ROOT, read_json, page_path, write_json, enabled_sources
 from engine.collect.freshness import check
 from engine.collect.access_log import is_probe
 from engine.store.db import connect, upsert
@@ -53,8 +53,7 @@ def freshness(db, date, cfg=None):
         rows = db.execute('SELECT * FROM source_status WHERE source=? AND snapshot<=? ORDER BY newest_real DESC,snapshot DESC', (source, date)).fetchall()
         r = rows[0]
         result.append(dict(source=source, **check(r['newest_real'], date), evidence=json.loads(r['evidence'])))
-    expected = ['gsc', 'yandex', 'metrika', 'access_log', 'funnel', 'site-digest', 'crawl']
-    expected += ['wordstat_'+str(i) for i, _ in enumerate((cfg or {}).get('wordstat_files', []))]
+    expected = enabled_sources(cfg) if cfg is not None else ['gsc', 'yandex', 'metrika', 'access_log', 'funnel', 'site-digest', 'crawl']
     found = {r['source'] for r in result}
     for source in expected:
         if source not in found:

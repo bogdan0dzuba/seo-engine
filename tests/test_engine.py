@@ -88,7 +88,7 @@ class EngineTest(unittest.TestCase):
         with patch.dict(os.environ, {'SEO_ENGINE_DATA': str(self.data)}), contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
             for command in ('collect', 'crawl', 'load', 'signals', 'report'):
                 code = main([command, '--site', str(cfg_file), '--date', self.date])
-                self.assertEqual(code, 2 if command == 'signals' else 0)
+                self.assertEqual(code, 0)  # Unconfigured sources are disabled, not stale.
         db = connect(self.cfg)
         sig = [r[0] for r in db.execute("SELECT subject FROM signal WHERE rule='no_impressions'")]
         self.assertEqual(sig, ['/articles/old/'])

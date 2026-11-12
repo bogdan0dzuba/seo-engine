@@ -16,8 +16,8 @@ def collect(cfg, folder, start, end):
         user = call(root+'/user')
         user['user_id']  # Check the dependency inside the endpoint boundary.
         return user
-    user = endpoints_run.save('wm_user', root+'/user', fetch_user)
-    if user is not None:
+    user = endpoints_run.save('wm_user', root+'/user', fetch_user) if cfg.get('webmaster_host_id') else None
+    if user is not None and cfg.get('webmaster_host_id'):
         base = root+'/user/'+str(user['user_id'])+'/hosts/'+quote(cfg['webmaster_host_id'], safe='')
         history_start = min(start, (dt.date.fromisoformat(end)-dt.timedelta(days=60)).isoformat())
         dates = urlencode({'date_from': history_start+'T00:00:00Z', 'date_to': end+'T23:59:59Z'})
@@ -62,7 +62,7 @@ def collect(cfg, folder, start, end):
                ('daily', 'ym:s:date,ym:s:lastTrafficSource', None),
                ('referrers', 'ym:s:date,ym:s:startURL,ym:s:referer', None)]
     # Metrika uses the shared token but has no Webmaster dependency.
-    for name, dims, flt in reports:
+    for name, dims, flt in reports if cfg.get('metrika_counter') else []:
         def metrika():
             offset, rows, payload = 1, [], None
             try:

@@ -8,21 +8,29 @@ from engine.config import load
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Контур: read-only SEO measurement engine')
-    parser.add_argument('command', choices=['collect', 'crawl', 'load', 'signals', 'report', 'ip-ranges'])
+    parser.add_argument('command', choices=['collect', 'crawl', 'load', 'signals', 'report', 'ip-ranges', 'init-site', 'propose', 'card'])
     parser.add_argument('--site', required=True, help='site name or config path')
     parser.add_argument('--date', default=dt.date.today().isoformat())
     parser.add_argument('--live', action='store_true', help='read live APIs using Keychain; never implied')
     parser.add_argument('--backfill', action='store_true')
     parser.add_argument('--start')
     parser.add_argument('--end')
+    parser.add_argument('--domain')
+    parser.add_argument('--data-dir')
     args = parser.parse_args(argv)
     dt.date.fromisoformat(args.date)
+    if args.command == 'init-site':
+        if not args.domain:
+            parser.error('init-site requires --domain')
+        from engine.config import init_site
+        print(json.dumps(init_site(args.site, args.domain, args.data_dir), ensure_ascii=False))
+        return 0
     cfg = load(args.site)
     if args.command == 'collect':
         from engine.collect.run import collect
         result = collect(cfg, args.date, args.live, args.backfill, args.start, args.end)
         print(json.dumps(result, ensure_ascii=False))
-        return 1 if args.live and any(result.get(s) != 'live' for s in ('google', 'yandex')) else 0
+        return 1 if result.get('errors') else 0
     if args.command == 'crawl':
         from engine.crawl.run import crawl
         result = crawl(cfg, args.date)
@@ -42,6 +50,9 @@ def main(argv=None):
             db.close()
             return 2
         return 0
+    elif args.command in ('propose', 'card'):
+        from engine.proposals.run import propose, card
+        result = (propose if args.command == 'propose' else card)(cfg, args.date)
     elif args.command == 'report':
         from engine.report.run import report
         result = report(cfg, args.date)

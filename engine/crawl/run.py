@@ -93,6 +93,8 @@ def sitemap_urls(cfg):
 
 
 def crawl(cfg, date):
+    if not cfg.get('site_files'):
+        return {'pages': 0, 'issues': 0, 'status': 'disabled'}
     rows = []
     host = urlsplit(cfg['domain']).netloc
     for url in sitemap_urls(cfg):

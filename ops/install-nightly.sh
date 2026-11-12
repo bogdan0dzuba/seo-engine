@@ -16,10 +16,10 @@ if [[ "$action" == "remove" ]]; then
   exit 0
 fi
 sed -e "s|__PYTHON3__|$(command -v python3)|" -e "s|__REPOSITORY__|$repo|" -e "s|__DATA_DIRECTORY__|$data|g" \
-    -e "s|ru.seo-engine.lida.nightly|$label|" -e "s|<string>lida</string>|<string>${site}</string>|" \
+    -e "s|__LABEL__|$label|" -e "s|__SITE__|${site}|" \
     -e "s|<key>Hour</key><integer>4</integer>|<key>Hour</key><integer>${hour}</integer>|" \
     -e "s|<key>Minute</key><integer>10</integer>|<key>Minute</key><integer>${minute}</integer>|" \
-    "$repo/docs/ru.seo-engine.lida.nightly.plist" > "$plist"
+    "$repo/docs/nightly.plist" > "$plist"
 plutil -lint "$plist"
 launchctl bootout "$domain/$label" 2>/dev/null || true
 launchctl bootstrap "$domain" "$plist"
